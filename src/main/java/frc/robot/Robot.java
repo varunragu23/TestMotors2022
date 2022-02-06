@@ -26,7 +26,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   private static final int kJoystickPort = 0;
-  private static final boolean testingSparkMAX = false;
+  private static final boolean testingSparkMAX = true;
   private static final int motorPort = 14;
   private static final double maxSpeed = 1.000;
   private static final boolean inverted = false;
