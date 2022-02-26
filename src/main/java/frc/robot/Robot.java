@@ -60,7 +60,7 @@ public class Robot extends TimedRobot {
       tfx2_motor = new WPI_TalonFX(motorPort2);
       tfx2_motor.configFactoryDefault();
       tfx2_motor.setInverted(inverted);
-      tfx2_motor.follow(tfx2_motor);
+      tfx2_motor.follow(tfx_motor);
     }
 
   }
