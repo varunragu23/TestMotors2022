@@ -125,7 +125,7 @@ public class Robot extends TimedRobot {
     }
     else {
       tfx_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
-      hood_motor.set(hood_joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+      hood_motor.set(hood_joystick.getRawAxis(XBOX_LEFT_X_AXIS) * hoodSpeed);
     }
   }
 
