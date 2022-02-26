@@ -26,17 +26,21 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   private static final int kJoystickPort = 0;
+  private static final int kHoodJoystickPort = 1;
   private static final boolean testingSparkMAX = false;
   private static final int motorPort = 20;
   private static final int motorPort2 = 21;
   private static final double maxSpeed = 1.000;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;
   private static final boolean inverted = false;
   private static final int XBOX_LEFT_X_AXIS = 0;
+  private static final double hoodSpeed = 0.1;
 
   private XboxController joystick = new XboxController(kJoystickPort); // Joystick
+  private XboxController hood_joystick = new XboxController(kHoodJoystickPort);
   private CANSparkMax sm_motor;
   private WPI_TalonFX tfx_motor;
   private WPI_TalonFX tfx2_motor;
+  private WPI_TalonFX hood_motor;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -61,6 +65,9 @@ public class Robot extends TimedRobot {
       tfx2_motor.configFactoryDefault();
       tfx2_motor.setInverted(inverted);
       tfx2_motor.follow(tfx_motor);
+      hood_motor = new WPI_TalonFX(motorPort);
+      hood_motor.configFactoryDefault();
+      hood_motor.setInverted(inverted);     
     }
 
   }
@@ -118,6 +125,7 @@ public class Robot extends TimedRobot {
     }
     else {
       tfx_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+      hood_motor.set(hood_joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
     }
   }
 
