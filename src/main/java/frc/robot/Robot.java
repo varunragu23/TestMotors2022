@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import com.revrobotics.RelativeEncoder;
+
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -26,7 +28,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   private static final int kJoystickPort = 0;
-  private static final int kHoodJoystickPort = 1; // this should be for the second joystick if it doesnt work keep on changing
+  // private static final int kHoodJoystickPort = 1; // this should be for the second joystick if it doesnt work keep on changing
   private static final boolean testingSparkMAX = false;
   private static final int motorPort = 20;
   private static final int motorPort2 = 21;
@@ -35,14 +37,26 @@ public class Robot extends TimedRobot {
   private static final boolean inverted = false;
   private static final boolean hoodInverted = false;
   private static final int XBOX_LEFT_X_AXIS = 0;
+  private static final int XBOX_LEFT_Y_AXIS = 1;
+  private static final int XBOX_RIGHT_X_AXIS = 4;
+  private static final int XBOX_RIGHT_Y_AXIS = 5;
   private static final double hoodSpeed = 0.1; // CHANGE SPEED IF TOO SLOW FOR HOOD
+  private static final double kP = 0.2;
 
   private XboxController joystick = new XboxController(kJoystickPort); // Joystick
-  private XboxController hood_joystick = new XboxController(kHoodJoystickPort);
+  // private XboxController hood_joystick = new XboxController(kHoodJoystickPort);
   private CANSparkMax sm_motor;
   private WPI_TalonFX tfx_motor;
   private WPI_TalonFX tfx2_motor;
   private CANSparkMax hood_motor;
+  private static int hoodMode = 0;
+
+  private static final int gearTeeth = 33;
+  private static final int hoodTeeth = 20;
+
+  private static final boolean smart = false;
+
+  private RelativeEncoder m_encoder;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -128,7 +142,60 @@ public class Robot extends TimedRobot {
     else {
       tfx_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
       tfx2_motor.set(-joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
-      hood_motor.set(hood_joystick.getRawAxis(XBOX_LEFT_X_AXIS) * hoodSpeed);
+      if(smart) {
+        if(joystick.getAButton()) {
+          hoodMode = 0;
+        }
+        else if(joystick.getBButton()) {
+          hoodMode = 1;
+        }
+        else if(joystick.getXButton()) {
+          hoodMode = 2;
+        }
+        else if(joystick.getYButton()) {
+          hoodMode = 3;
+        }
+
+        double goalTicks = (double)hoodMode * 7;
+        int motorTicks = 42 * 70; // change later (google search) multiply be gear ratio
+
+
+        // how many ticks are in the motor
+
+        m_encoder = hood_motor.getEncoder();
+
+        // 30 ticks in spark max - still need to clarify
+        // program with joystick -> hood at bottom, spin to top, ahve encoder, count values
+        // 33 ticks in grey gear
+        // 21 ticks in the hood
+
+
+        // goes 10 teeth to 40 teeth
+
+        // 33 teeth gear
+        // 1 rev of motor -> 33 teeth
+        // 0 -> 0
+        // 1 -> 7
+        // 2 -> 14
+        // 3 -> 21
+
+        // have encoder measure how many ticks have been rotated
+
+
+
+        // convert it to fraction of a rotation (position)/motorticks // done
+        // convert the fraction to how many teeth on the hood
+        double trn = m_encoder.getPosition();
+        double teethMove = trn * gearTeeth;
+        // then find difference
+        double dif = goalTicks - teethMove;
+        // you do p * difference speed for motor
+        double speed = kP * dif;
+
+        hood_motor.set(speed);
+      }
+
+      hood_motor.set(joystick.getRawAxis(XBOX_RIGHT_X_AXIS) * hoodSpeed);
     }
   }
 
