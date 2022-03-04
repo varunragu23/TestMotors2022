@@ -32,7 +32,7 @@ public class Robot extends TimedRobot {
   private static final boolean testingSparkMAX = false;
   private static final int motorPort = 20;
   private static final int motorPort2 = 21;
-  private static final int hoodMotorPort = 32; // EDIT THIS ONCE U FIND MOTOR PORT FOR SPARK MAX MC
+  private static final int hoodMotorPort = 22; // EDIT THIS ONCE U FIND MOTOR PORT FOR SPARK MAX MC
   private static final double maxSpeed = 1.000; // this is for the  ball                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ;
   private static final boolean inverted = false;
   private static final boolean hoodInverted = false;
@@ -40,8 +40,8 @@ public class Robot extends TimedRobot {
   private static final int XBOX_LEFT_Y_AXIS = 1;
   private static final int XBOX_RIGHT_X_AXIS = 4;
   private static final int XBOX_RIGHT_Y_AXIS = 5;
-  private static final double hoodSpeed = 0.1; // CHANGE SPEED IF TOO SLOW FOR HOOD
-  private static final double kP = 0.2;
+  private static final double hoodSpeed = 0.05; // CHANGE SPEED IF TOO SLOW FOR HOOD
+  private static final double kP = 0.02;
 
   private XboxController joystick = new XboxController(kJoystickPort); // Joystick
   // private XboxController hood_joystick = new XboxController(kHoodJoystickPort);
@@ -185,7 +185,7 @@ public class Robot extends TimedRobot {
 
         // convert it to fraction of a rotation (position)/motorticks // done
         // convert the fraction to how many teeth on the hood
-        double trn = m_encoder.getPosition();
+        double trn = m_encoder.getPosition()/70;
         double teethMove = trn * gearTeeth;
         // then find difference
         double dif = goalTicks - teethMove;
