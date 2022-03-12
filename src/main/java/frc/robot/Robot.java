@@ -33,15 +33,19 @@ public class Robot extends TimedRobot {
   private static final int motorPort = 20;
   private static final int motorPort2 = 21;
   private static final int hoodMotorPort = 22; // EDIT THIS ONCE U FIND MOTOR PORT FOR SPARK MAX MC
+  private static final int indexerPort = 6; // spark max
   private static final double maxSpeed = 1.000; // this is for the  ball                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ;
   private static final boolean inverted = false;
-  private static final boolean hoodInverted = false;
+  private static final boolean hoodInverted = true;
+  private static final boolean indexerInverted = true; // modify
   private static final int XBOX_LEFT_X_AXIS = 0;
   private static final int XBOX_LEFT_Y_AXIS = 1;
   private static final int XBOX_RIGHT_X_AXIS = 4;
   private static final int XBOX_RIGHT_Y_AXIS = 5;
-  private static final double hoodSpeed = 0.05; // CHANGE SPEED IF TOO SLOW FOR HOOD
-  private static final double kP = 0.02;
+  private static final double hoodSpeed = 0.15; // CHANGE SPEED IF TOO SLOW FOR HOOD
+
+  private static final double indexerSpeed = 1.0; // modify
+  private static final double kP = 0.01;
 
   private XboxController joystick = new XboxController(kJoystickPort); // Joystick
   // private XboxController hood_joystick = new XboxController(kHoodJoystickPort);
@@ -49,12 +53,19 @@ public class Robot extends TimedRobot {
   private WPI_TalonFX tfx_motor;
   private WPI_TalonFX tfx2_motor;
   private CANSparkMax hood_motor;
+  private CANSparkMax indexer_motor;
   private static int hoodMode = 0;
 
   private static final int gearTeeth = 33;
   private static final int hoodTeeth = 20;
 
+  public static double kIndexerSpeed = 0.1;
+
   private static final boolean smart = false;
+
+  private static final boolean runIndex = true;
+
+  private static boolean indexRun = false;
 
   private RelativeEncoder m_encoder;
 
@@ -84,6 +95,12 @@ public class Robot extends TimedRobot {
       hood_motor = new CANSparkMax(hoodMotorPort, MotorType.kBrushless);
       hood_motor.restoreFactoryDefaults();
       hood_motor.setInverted(hoodInverted);
+      
+      if(runIndex) {
+        indexer_motor = new CANSparkMax(indexerPort, MotorType.kBrushless);
+        indexer_motor.restoreFactoryDefaults();
+        indexer_motor.setInverted(indexerInverted);
+      }
     }
 
   }
@@ -156,7 +173,7 @@ public class Robot extends TimedRobot {
           hoodMode = 3;
         }
 
-        double goalTicks = (double)hoodMode * 7;
+        double goalTicks = (double)hoodMode * 3;
         int motorTicks = 42 * 70; // change later (google search) multiply be gear ratio
 
 
@@ -193,9 +210,27 @@ public class Robot extends TimedRobot {
         double speed = kP * dif;
 
         hood_motor.set(speed);
+        SmartDashboard.putNumber("Hood Mode", hoodMode);
+        SmartDashboard.putNumber("Tick Goal", goalTicks);
+        SmartDashboard.putNumber("Current Position", trn);
+        SmartDashboard.putNumber("Difference in Ticks", dif);
+        SmartDashboard.putNumber("Speed", speed);
+        // System.out.println("Current Position" + trn);
+        // System.out.println("Difference in Ticks" + dif);
+        // System.out.println("Speed" + speed);
       }
-
-      hood_motor.set(joystick.getRawAxis(XBOX_RIGHT_X_AXIS) * hoodSpeed);
+      else {hood_motor.set(joystick.getRawAxis(XBOX_RIGHT_X_AXIS) * hoodSpeed);}
+      if(runIndex) {
+        if(joystick.getRightBumper()) {
+          indexRun = true;
+        }
+        if(joystick.getLeftBumper()) {
+          indexRun = false;
+        }
+        double speed = 0.00000;
+        if(indexRun) speed = indexerSpeed;
+        indexer_motor.set(speed);
+      }
     }
   }
 
