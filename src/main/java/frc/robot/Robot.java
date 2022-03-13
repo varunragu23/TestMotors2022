@@ -4,12 +4,17 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -34,17 +39,27 @@ public class Robot extends TimedRobot {
   private static final int motorPort2 = 21;
   private static final int hoodMotorPort = 22; // EDIT THIS ONCE U FIND MOTOR PORT FOR SPARK MAX MC
   private static final int indexerPort = 6; // spark max
+  private static final int funnelPort = 7; // spark max
+  private static final int rollerPort = 8; // spark max
+  private static final int armPort = 5; // spark max
   private static final double maxSpeed = 1.000; // this is for the  ball                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ;
-  private static final boolean inverted = false;
+  private static final boolean inverted = true;
   private static final boolean hoodInverted = true;
   private static final boolean indexerInverted = true; // modify
+  private static final boolean funnelInverted = true; // modify
+  private static final boolean rollerInverted = true; // modify
+  private static final boolean armInverted = true; //modify
+
   private static final int XBOX_LEFT_X_AXIS = 0;
   private static final int XBOX_LEFT_Y_AXIS = 1;
   private static final int XBOX_RIGHT_X_AXIS = 4;
   private static final int XBOX_RIGHT_Y_AXIS = 5;
-  private static final double hoodSpeed = 0.15; // CHANGE SPEED IF TOO SLOW FOR HOOD
+  private static final double hoodSpeed = 0.05; // CHANGE SPEED IF TOO SLOW FOR HOOD
 
-  private static final double indexerSpeed = 1.0; // modify
+  private static final double indexerSpeed = 0.9; // modify
+  private static final double funnelSpeed = 0.35; // modify
+  private static final double rollerSpeed = 0.8; //modify
+  private static final double armSpeed = 0.1;
   private static final double kP = 0.01;
 
   private XboxController joystick = new XboxController(kJoystickPort); // Joystick
@@ -54,27 +69,97 @@ public class Robot extends TimedRobot {
   private WPI_TalonFX tfx2_motor;
   private CANSparkMax hood_motor;
   private CANSparkMax indexer_motor;
+  private CANSparkMax funnel_motor;
+  private CANSparkMax roller_motor;
+  private CANSparkMax arm_motor;
   private static int hoodMode = 0;
 
   private static final int gearTeeth = 33;
   private static final int hoodTeeth = 20;
 
-  public static double kIndexerSpeed = 0.1;
+  //public static double kIndexerSpeed = 0.1;
+
 
   private static final boolean smart = false;
 
   private static final boolean runIndex = true;
 
+  private static final boolean runFunnel = true;
+
+  private static final boolean runRollers = true;
+
+  private static final boolean runArm = true;
+
+  private static final boolean runDT = true;
+
+  private static final boolean runShooter = true;
+
+  private static final boolean runHood = true;
+
   private static boolean indexRun = false;
+  private static boolean funnelRun = false;
+  private static int rollerRun = 1;
+  private static boolean shooterRun = false;
+  private static int hoodRun = 0;
+  private static int armRun = 0;
 
   private RelativeEncoder m_encoder;
+  //DT Constants
+  public static final int kLeftMasterPort = 1;//2
+  public static final int kLeftFollowerPort = 2;//1
+  public static final int kRightMasterPort = 3;//4
+  public static final int kRightFollowerPort = 4;//3
 
+  public static final TalonFXInvertType kLeftInvertType = TalonFXInvertType.CounterClockwise;
+  public static final TalonFXInvertType kRightInvertType = TalonFXInvertType.Clockwise;
+
+  public static final double kMaxOutput = 0.6;
+  public static double kDistancePerPulseFactor;
+
+  //Drivetrain
+  private final WPI_TalonFX leftMaster = new WPI_TalonFX(kLeftMasterPort);
+  private final WPI_TalonFX leftFollower = new WPI_TalonFX( kLeftFollowerPort);
+  private final WPI_TalonFX rightMaster = new WPI_TalonFX( kRightMasterPort);
+  private final WPI_TalonFX rightFollower = new WPI_TalonFX( kRightFollowerPort);
+
+  private final MotorControllerGroup m_leftGroup = new MotorControllerGroup(leftMaster, leftFollower);
+  private final MotorControllerGroup m_rightGroup = new MotorControllerGroup(rightMaster, rightFollower);
+
+  private final DifferentialDrive drive = new DifferentialDrive(m_leftGroup, m_rightGroup);
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
   @Override
   public void robotInit() {
+
+  
+
+    leftMaster.configFactoryDefault();
+    leftFollower.configFactoryDefault();
+    rightMaster.configFactoryDefault();
+    rightFollower.configFactoryDefault();
+
+    TalonFXConfiguration configs = new TalonFXConfiguration();
+
+
+    leftMaster.configAllSettings(configs);
+    leftFollower.configAllSettings(configs);
+    rightMaster.configAllSettings(configs);
+    rightFollower.configAllSettings(configs);
+
+    leftFollower.follow(leftMaster);
+    rightFollower.follow(rightMaster);
+
+    leftMaster.setNeutralMode(NeutralMode.Brake);
+    leftFollower.setNeutralMode(NeutralMode.Brake);
+    rightMaster.setNeutralMode(NeutralMode.Brake);
+    rightFollower.setNeutralMode(NeutralMode.Brake);
+
+    leftMaster.setInverted( kLeftInvertType);
+    leftFollower.setInverted(kLeftInvertType);
+    rightMaster.setInverted( kRightInvertType);
+    rightFollower.setInverted( kRightInvertType);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
@@ -100,6 +185,21 @@ public class Robot extends TimedRobot {
         indexer_motor = new CANSparkMax(indexerPort, MotorType.kBrushless);
         indexer_motor.restoreFactoryDefaults();
         indexer_motor.setInverted(indexerInverted);
+      }
+      if(runFunnel) {
+        funnel_motor = new CANSparkMax(funnelPort, MotorType.kBrushless);
+        funnel_motor.restoreFactoryDefaults();
+        funnel_motor.setInverted(funnelInverted);
+      }
+      if (runRollers){
+        roller_motor = new CANSparkMax(rollerPort, MotorType.kBrushless);
+        roller_motor.restoreFactoryDefaults();
+        roller_motor.setInverted(rollerInverted);
+      }
+      if (runArm){
+        arm_motor = new CANSparkMax(armPort, MotorType.kBrushless);
+        arm_motor.restoreFactoryDefaults();
+        arm_motor.setInverted(armInverted);
       }
     }
 
@@ -153,73 +253,102 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    if(testingSparkMAX) {
-      sm_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
-    }
-    else {
-      tfx_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
-      tfx2_motor.set(-joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
-      if(smart) {
-        if(joystick.getAButton()) {
-          hoodMode = 0;
-        }
-        else if(joystick.getBButton()) {
-          hoodMode = 1;
-        }
-        else if(joystick.getXButton()) {
-          hoodMode = 2;
-        }
-        else if(joystick.getYButton()) {
-          hoodMode = 3;
-        }
+    // if(testingSparkMAX) {
+    //   sm_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+    // }
+    // else {
+    //   tfx_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+    //   tfx2_motor.set(-joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+    //   if(smart) {
+    //     if(joystick.getAButton()) {
+    //       hoodMode = 0;
+    //     }
+    //     else if(joystick.getBButton()) {
+    //       hoodMode = 1;
+    //     }
+    //     else if(joystick.getXButton()) {
+    //       hoodMode = 2;
+    //     }
+    //     else if(joystick.getYButton()) {
+    //       hoodMode = 3;
+    //     }
 
-        double goalTicks = (double)hoodMode * 3;
-        int motorTicks = 42 * 70; // change later (google search) multiply be gear ratio
-
-
-        // how many ticks are in the motor
-
-        m_encoder = hood_motor.getEncoder();
-
-        // 30 ticks in spark max - still need to clarify
-        // program with joystick -> hood at bottom, spin to top, ahve encoder, count values
-        // 33 ticks in grey gear
-        // 21 ticks in the hood
+    //     double goalTicks = (double)hoodMode * 3;
+    //     int motorTicks = 42 * 70; // change later (google search) multiply be gear ratio
 
 
-        // goes 10 teeth to 40 teeth
+    //     // how many ticks are in the motor
 
-        // 33 teeth gear
-        // 1 rev of motor -> 33 teeth
-        // 0 -> 0
-        // 1 -> 7
-        // 2 -> 14
-        // 3 -> 21
+    //     m_encoder = hood_motor.getEncoder();
 
-        // have encoder measure how many ticks have been rotated
+    //     // 30 ticks in spark max - still need to clarify
+    //     // program with joystick -> hood at bottom, spin to top, ahve encoder, count values
+    //     // 33 ticks in grey gear
+    //     // 21 ticks in the hood
 
 
+    //     // goes 10 teeth to 40 teeth
 
-        // convert it to fraction of a rotation (position)/motorticks // done
-        // convert the fraction to how many teeth on the hood
-        double trn = m_encoder.getPosition()/70;
-        double teethMove = trn * gearTeeth;
-        // then find difference
-        double dif = goalTicks - teethMove;
-        // you do p * difference speed for motor
-        double speed = kP * dif;
+    //     // 33 teeth gear
+    //     // 1 rev of motor -> 33 teeth
+    //     // 0 -> 0
+    //     // 1 -> 7
+    //     // 2 -> 14
+    //     // 3 -> 21
 
-        hood_motor.set(speed);
-        SmartDashboard.putNumber("Hood Mode", hoodMode);
-        SmartDashboard.putNumber("Tick Goal", goalTicks);
-        SmartDashboard.putNumber("Current Position", trn);
-        SmartDashboard.putNumber("Difference in Ticks", dif);
-        SmartDashboard.putNumber("Speed", speed);
-        // System.out.println("Current Position" + trn);
-        // System.out.println("Difference in Ticks" + dif);
-        // System.out.println("Speed" + speed);
+    //     // have encoder measure how many ticks have been rotated
+
+
+
+    //     // convert it to fraction of a rotation (position)/motorticks // done
+    //     // convert the fraction to how many teeth on the hood
+    //     double trn = m_encoder.getPosition()/70;
+    //     double teethMove = trn * gearTeeth;
+    //     // then find difference
+    //     double dif = goalTicks - teethMove;
+    //     // you do p * difference speed for motor
+    //     double speed = kP * dif;
+
+    //     hood_motor.set(speed);
+    //     SmartDashboard.putNumber("Hood Mode", hoodMode);
+    //     SmartDashboard.putNumber("Tick Goal", goalTicks);
+    //     SmartDashboard.putNumber("Current Position", trn);
+    //     SmartDashboard.putNumber("Difference in Ticks", dif);
+    //     SmartDashboard.putNumber("Speed", speed);
+    //     // System.out.println("Current Position" + trn);
+    //     // System.out.println("Difference in Ticks" + dif);
+    //     // System.out.println("Speed" + speed);
+      // }
+      // else {hood_motor.set(joystick.getRawAxis(XBOX_RIGHT_X_AXIS) * hoodSpeed);}
+      if (runDT){
+        drive.arcadeDrive(-joystick.getRawAxis(1), joystick.getRawAxis(4));
+        drive.setMaxOutput(kMaxOutput);
       }
-      else {hood_motor.set(joystick.getRawAxis(XBOX_RIGHT_X_AXIS) * hoodSpeed);}
+      if (runShooter){
+      
+        double shoot_speed = 0.00000;        
+        if(shooterRun) shoot_speed = maxSpeed;
+        tfx_motor.set(shoot_speed);
+        tfx2_motor.set(-shoot_speed);
+        if(joystick.getStartButtonPressed()) {
+          shooterRun=!shooterRun;
+          }
+      }
+      if (runHood){
+        if(joystick.getXButtonPressed()) {
+          hoodRun = 1;
+        }
+        else if (joystick.getXButtonReleased()){
+          hoodRun = 0;
+        }
+        if(joystick.getAButtonPressed()) {
+          hoodRun = -1;
+        }
+        else if (joystick.getAButtonReleased()){
+          hoodRun = 0;
+        }
+        hood_motor.set(hoodSpeed * hoodRun);
+      }   
       if(runIndex) {
         if(joystick.getRightBumper()) {
           indexRun = true;
@@ -230,6 +359,40 @@ public class Robot extends TimedRobot {
         double speed = 0.00000;
         if(indexRun) speed = indexerSpeed;
         indexer_motor.set(speed);
+      }
+      if(runFunnel) {
+        if(joystick.getRightBumper()) {
+          funnelRun = true;
+        }
+        if(joystick.getLeftBumper()) {
+          funnelRun = false;
+        }
+        double speed = 0.0000;
+        if(funnelRun) speed = funnelSpeed;
+        funnel_motor.set(speed);
+      }
+      if (runRollers){
+        if(joystick.getBackButtonPressed()) {
+          if (rollerRun==1) rollerRun = 0;
+          else rollerRun = 1;
+          double speed = 0.0000;
+          if(rollerRun==1) speed = rollerSpeed;
+          roller_motor.set(speed);
+      }
+      if (runArm){
+        if(joystick.getYButtonPressed()) {
+          armRun = 1;
+        }
+        else if (joystick.getYButtonReleased()){
+          armRun = 0;
+        }
+        if(joystick.getBButtonPressed()) {
+          armRun = -1;
+        }
+        else if (joystick.getBButtonReleased()){
+          armRun = 0;
+        }
+        arm_motor.set(armSpeed * armRun);
       }
     }
   }
