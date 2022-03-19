@@ -74,25 +74,25 @@ public class Robot extends TimedRobot {
   private CANSparkMax arm_motor;
   private static int hoodMode = 0;
 
-  private static final int gearTeeth = 33;
+  private static final int gearTeeth = 512;
   private static final int hoodTeeth = 20;
 
   //public static double kIndexerSpeed = 0.1;
 
 
-  private static final boolean smart = false;
+  private static final boolean smart = true;
 
-  private static final boolean runIndex = true;
+  private static final boolean runIndex = false;
 
-  private static final boolean runFunnel = true;
+  private static final boolean runFunnel = false;
 
-  private static final boolean runRollers = true;
+  private static final boolean runRollers = false;
 
-  private static final boolean runArm = true;
+  private static final boolean runArm = false;
 
-  private static final boolean runDT = true;
+  private static final boolean runDT = false;
 
-  private static final boolean runShooter = true;
+  private static final boolean runShooter = false;
 
   private static final boolean runHood = true;
 
@@ -250,76 +250,84 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {}
 
+  private double convTicksToAngle(double ticks) {
+    return (ticks/500.0000) * 360.000;
+  }
+
+  private double convAngletoTicks(double angle) {
+    return (angle/360.0000) * 500.00000;
+  }
+
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    // if(testingSparkMAX) {
-    //   sm_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
-    // }
-    // else {
-    //   tfx_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
-    //   tfx2_motor.set(-joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
-    //   if(smart) {
-    //     if(joystick.getAButton()) {
-    //       hoodMode = 0;
-    //     }
-    //     else if(joystick.getBButton()) {
-    //       hoodMode = 1;
-    //     }
-    //     else if(joystick.getXButton()) {
-    //       hoodMode = 2;
-    //     }
-    //     else if(joystick.getYButton()) {
-    //       hoodMode = 3;
-    //     }
+    if(testingSparkMAX) {
+      sm_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+    }
+    else {
+      tfx_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+      tfx2_motor.set(-joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+      if(smart) {
+        if(joystick.getAButton()) {
+          hoodMode = 0;
+        }
+        else if(joystick.getBButton()) {
+          hoodMode = 1;
+        }
+        else if(joystick.getXButton()) {
+          hoodMode = 2;
+        }
+        else if(joystick.getYButton()) {
+          hoodMode = 3;
+        }
 
-    //     double goalTicks = (double)hoodMode * 3;
-    //     int motorTicks = 42 * 70; // change later (google search) multiply be gear ratio
-
-
-    //     // how many ticks are in the motor
-
-    //     m_encoder = hood_motor.getEncoder();
-
-    //     // 30 ticks in spark max - still need to clarify
-    //     // program with joystick -> hood at bottom, spin to top, ahve encoder, count values
-    //     // 33 ticks in grey gear
-    //     // 21 ticks in the hood
+        double goalAngle = (double)hoodMode * 15;
+        // int motorTicks =  * 100; // change later (google search) multiply by gear ratio
 
 
-    //     // goes 10 teeth to 40 teeth
+        // how many ticks are in the motor
 
-    //     // 33 teeth gear
-    //     // 1 rev of motor -> 33 teeth
-    //     // 0 -> 0
-    //     // 1 -> 7
-    //     // 2 -> 14
-    //     // 3 -> 21
+        m_encoder = hood_motor.getEncoder();
 
-    //     // have encoder measure how many ticks have been rotated
+        // 30 ticks in spark max - still need to clarify
+        // program with joystick -> hood at bottom, spin to top, ahve encoder, count values
+        // 33 ticks in grey gear
+        // 21 ticks in the hood
 
 
+        // goes 10 teeth to 40 teeth
 
-    //     // convert it to fraction of a rotation (position)/motorticks // done
-    //     // convert the fraction to how many teeth on the hood
-    //     double trn = m_encoder.getPosition()/70;
-    //     double teethMove = trn * gearTeeth;
-    //     // then find difference
-    //     double dif = goalTicks - teethMove;
-    //     // you do p * difference speed for motor
-    //     double speed = kP * dif;
+        // 33 teeth gear
+        // 1 rev of motor -> 33 teeth
+        // 0 -> 0
+        // 1 -> 7
+        // 2 -> 14
+        // 3 -> 21
 
-    //     hood_motor.set(speed);
-    //     SmartDashboard.putNumber("Hood Mode", hoodMode);
-    //     SmartDashboard.putNumber("Tick Goal", goalTicks);
-    //     SmartDashboard.putNumber("Current Position", trn);
-    //     SmartDashboard.putNumber("Difference in Ticks", dif);
-    //     SmartDashboard.putNumber("Speed", speed);
-    //     // System.out.println("Current Position" + trn);
-    //     // System.out.println("Difference in Ticks" + dif);
-    //     // System.out.println("Speed" + speed);
-      // }
-      // else {hood_motor.set(joystick.getRawAxis(XBOX_RIGHT_X_AXIS) * hoodSpeed);}
+        // have encoder measure how many ticks have been rotated
+
+        double goalTicks = convAngletoTicks(goalAngle);
+
+        // convert it to fraction of a rotation (position)/motorticks // done
+        // convert the fraction to how many teeth on the hood
+        double trn = m_encoder.getPosition()/100; // how many revs have turned ???
+        double teethMove = trn * gearTeeth;
+        // then find difference
+        double dif = goalTicks - teethMove;
+        // you do p * difference speed for motor
+        double speed = kP * dif;
+
+        hood_motor.set(speed);
+        SmartDashboard.putNumber("Hood Mode", hoodMode);
+        SmartDashboard.putNumber("Tick Goal", goalTicks);
+        SmartDashboard.putNumber("Current Position", trn);
+        SmartDashboard.putNumber("Difference in Ticks", dif);
+        SmartDashboard.putNumber("Speed", speed);
+        // System.out.println("Current Position" + trn);
+        // System.out.println("Difference in Ticks" + dif);
+        // System.out.println("Speed" + speed);
+      }
+      else {hood_motor.set(joystick.getRawAxis(XBOX_RIGHT_X_AXIS) * hoodSpeed);}
       if (runDT){
         drive.arcadeDrive(-joystick.getRawAxis(1), joystick.getRawAxis(4));
         drive.setMaxOutput(kMaxOutput);
@@ -334,21 +342,21 @@ public class Robot extends TimedRobot {
           shooterRun=!shooterRun;
           }
       }
-      if (runHood){
-        if(joystick.getXButtonPressed()) {
-          hoodRun = 1;
-        }
-        else if (joystick.getXButtonReleased()){
-          hoodRun = 0;
-        }
-        if(joystick.getAButtonPressed()) {
-          hoodRun = -1;
-        }
-        else if (joystick.getAButtonReleased()){
-          hoodRun = 0;
-        }
-        hood_motor.set(hoodSpeed * hoodRun);
-      }   
+      // if (runHood){
+      //   if(joystick.getXButtonPressed()) {
+      //     hoodRun = 1;
+      //   }
+      //   else if (joystick.getXButtonReleased()){
+      //     hoodRun = 0;
+      //   }
+      //   if(joystick.getAButtonPressed()) {
+      //     hoodRun = -1;
+      //   }
+      //   else if (joystick.getAButtonReleased()){
+      //     hoodRun = 0;
+      //   }
+      //   hood_motor.set(hoodSpeed * hoodRun);
+      // }   
       if(runIndex) {
         if(joystick.getRightBumper()) {
           indexRun = true;
